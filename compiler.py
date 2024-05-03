@@ -3,6 +3,8 @@ from compilertools import *
 from parser import Parser
 import os # might need this for sys args?
 from Graph import *
+import threading
+import queue
 
 variables = []
 pre_allocations = {}
@@ -41,11 +43,22 @@ def compile_to_ir(file):
     reg_dict = {f"%eax": 0, f"%ecx": 1, f"%edx": 2, f"%edi": 3, f"%ebx": 4, f"%esi": 5}
 
     caller_reg_dict = {f"%eax": 0, f"%ecx": 1, f"%edx": 2}
-
-    inter_graphs = [assign_regs(ir_graph, file_tree, variables.copy(), reg_dict.copy())]
+    
+    thread_val_tuples = []
 
     for i, graph in enumerate(func_ir):
-        inter_graphs.append(assign_regs(graph, funcs[i], variables.copy(), caller_reg_dict.copy()))
+        q = queue.Queue()
+        t = threading.Thread(target=assign_regs, args=(graph, funcs[i], variables.copy(), caller_reg_dict.copy(), q))
+        print("started thread: ", i)
+        t.start()
+        thread_val_tuples.append((t, q))
+
+    inter_graphs = [assign_regs(ir_graph, file_tree, variables.copy(), reg_dict.copy())]
+  
+    for i, graph in enumerate(func_ir):
+        thread_val_tuples[i][0].join()
+        inter_graphs.append(thread_val_tuples[i][1].get_nowait())
+        print("joined thread: ", i)
         func_ir[i].vertices[0].block = [["pushl %ebp"], ["movl %esp, %ebp"], ['set_stack']] + func_ir[i].vertices[0].block
         func_ir[i].vertices[-1].block += [["movl %ebp, %esp"], ["popl %ebp"], ["ret"]]
     
@@ -128,7 +141,7 @@ def generate_assembly(ir_graphs, inter_graphs, func_names):
          # pop stack # TODO: update the pop x amount depending on args? 
     return assembly
 
-def assign_regs(ir_graph, file_tree, var_assignments, reg_dict):
+def assign_regs(ir_graph, file_tree, var_assignments, reg_dict, q = None):
     #print(var_assignments)
     calle_reg_set = {f"%eax", f"%ecx", f"%edx"}
     
@@ -369,6 +382,9 @@ def assign_regs(ir_graph, file_tree, var_assignments, reg_dict):
         #print(f"Var: {key}, Reg: {value['color']}, Edges: {value['edges']}")
 
     print("stack_counter", stack_counter)
+
+    if (q):
+        q.put_nowait((inter_graph, stack_counter - 1))
 
     return inter_graph, stack_counter - 1
 

@@ -1,14 +1,14 @@
-t435 = t13
-t438 = is_int(t435)
-if t438:
-    t439 = project_int(t435)
-    t440 = -t439
-    t14 = inject_int(t440)
+t1035 = t32
+t1038 = is_int(t1035)
+if t1038:
+    t1039 = project_int(t1035)
+    t1040 = -t1039
+    t33 = inject_int(t1040)
 else:
-    t441 = is_bool(t435)
-    if t441:
-        t442 = project_bool(t435)
-        t443 = -t442
-        t14 = inject_int(t443)
+    t1041 = is_bool(t1035)
+    if t1041:
+        t1042 = project_bool(t1035)
+        t1043 = -t1042
+        t33 = inject_int(t1043)
     else:
         throw_type_error()

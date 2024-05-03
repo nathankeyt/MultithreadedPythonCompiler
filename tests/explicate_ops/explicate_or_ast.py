@@ -2,30 +2,30 @@ Module(
     body=[
         Assign(
             targets=[
-                Name(id='t482', ctx=Store())],
-            value=Name(id='t29', ctx=Load())),
+                Name(id='t3', ctx=Store())],
+            value=Name(id='t1', ctx=Load())),
         Assign(
             targets=[
-                Name(id='t484', ctx=Store())],
-            value=Name(id='t32', ctx=Load())),
+                Name(id='t5', ctx=Store())],
+            value=Name(id='t2', ctx=Load())),
         Assign(
             targets=[
-                Name(id='t487', ctx=Store())],
+                Name(id='t8', ctx=Store())],
             value=Call(
                 func=Name(id='is_true', ctx=Load()),
                 args=[
-                    Name(id='t482', ctx=Load())],
+                    Name(id='t3', ctx=Load())],
                 keywords=[])),
         If(
-            test=Name(id='t487', ctx=Load()),
+            test=Name(id='t8', ctx=Load()),
             body=[
                 Assign(
                     targets=[
-                        Name(id='t33', ctx=Store())],
-                    value=Name(id='t482', ctx=Load()))],
+                        Name(id='t0', ctx=Store())],
+                    value=Name(id='t3', ctx=Load()))],
             orelse=[
                 Assign(
                     targets=[
-                        Name(id='t33', ctx=Store())],
-                    value=Name(id='t484', ctx=Load()))])],
+                        Name(id='t0', ctx=Store())],
+                    value=Name(id='t5', ctx=Load()))])],
     type_ignores=[])
