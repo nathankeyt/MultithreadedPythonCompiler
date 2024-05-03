@@ -1,0 +1,94 @@
+start: statement*
+?statement: expr
+         | assign
+         | if_stmt
+         | while_stmt
+         | func_def
+         | return_stmt
+         | _NL
+suite: _NL _INDENT statement+ _DEDENT
+def_suite: _NL _INDENT statement+ _DEDENT
+call: EVAL LPAR call RPAR
+    | INPUT LPAR RPAR
+    | PRINT LPAR expr RPAR
+    | TO_INT LPAR test RPAR
+    | CNAME LPAR expr* RPAR
+    | call LPAR expr* RPAR
+assign: CNAME EQUALS expr
+    | subscr EQUALS expr // worry about this later?
+expr: lambda_def
+    | constant
+    | binop
+    | unaryop
+    | parens
+    | call
+    | CNAME
+    | and_stmt
+    | or_stmt
+    | conditional
+    | not_stmt
+    | eq 
+    | neq
+    | subscr
+    | lst
+    | dct  
+    | is_stmt
+    | "True" -> const_true
+    | "False" -> const_false
+
+if_stmt: "if" test ":" suite ["else" ":" suite]
+while_stmt: "while" test ":" suite
+func_def: "def" CNAME "(" CNAME? ("," CNAME)* "):" def_suite
+lambda_def: "lambda" [CNAME] ("," expr)* ":" expr // make args optional?
+
+return_stmt: "return" expr
+and_stmt: expr "and" expr
+or_stmt: expr "or" expr
+conditional: expr "if" expr "else" expr
+!not_stmt: "not" expr
+!eq: expr EQ expr
+!neq: expr NEQ expr
+is_stmt: expr "is" expr
+lst: "[" expr? ("," expr)* "]"
+dct: "{" (expr ":" expr)? ("," expr ":" expr)* "}" // no sets exist at this point
+
+parens: LPAR expr RPAR
+constant: INT
+binop.-1: expr PLUS expr
+unaryop: MINUS expr
+subscr.2: expr "[" expr? "]"
+expr_lst: expr 
+        | expr "," expr_lst 
+
+test: and_stmt
+    | or_stmt
+    | conditional
+    | not_stmt
+    | eq
+    | neq
+    | is_stmt
+    | test_parens
+    | call // worry about this later
+test_parens: LPAR test RPAR
+
+COMMENT: /#[^\n]*/
+EVAL: "eval"
+INPUT: "input"
+TO_INT: "int"
+EQ: /==/
+NEQ: /!=/
+
+LPAR: "("
+RPAR: ")"
+MINUS: /\-/
+EQUALS: /\=/
+PLUS: /\+/
+PRINT: "print"
+_NL: ( /\r?\n[\t ]*/ | COMMENT )+
+
+%ignore /[\t \f]+/  // WS
+%ignore /\\[\t \f]*\r?\n/   // LINE_CONT
+
+%import common (INT, CNAME)
+%ignore COMMENT
+%declare _INDENT _DEDENT
