@@ -21,6 +21,9 @@ class Flattener():
         self.namespace = namespace
         self.dep_map = dep_map
 
+        for free_vars, var_mappings in dep_map.values():
+            self.free_vars.update(free_vars)
+
         if debug:
             open(f"debug/ast_original.py", "w").write(ast.dump(n, indent=4))
             print("initialized flattener")
@@ -787,7 +790,7 @@ class Flattener():
     
     def get_free_vars(self, lst: set(), n: AST, parent = None):
         if isinstance(n, Module):
-            for node in n.body.copy():
+            for node in ast.iter_child_nodes(n):
                 self.get_free_vars(lst, node, n)
         elif isinstance(n, FunctionDef):
             local_free_vars = self.get_free_and_bound_vars(n, set(), set())[0]
@@ -805,6 +808,12 @@ class Flattener():
                 self.get_free_vars(lst, node, parent)
     
     def heapify(self, n: AST, free_vars: set(), indexed: set(), prev = None):
+        if isinstance(n, Module):
+            for free_vars, var_mappings in self.dep_map.values():
+                indexed.update(free_vars)
+
+            for node in ast.iter_child_nodes(n):
+                self.heapify(node, free_vars, indexed, prev)
         if isinstance(n, Name) and (n.id in free_vars or n.id in indexed):
             return Subscript(n, Constant(0), Load())
         elif isinstance(n, Return) or isinstance(n, Expr) or isinstance(n, Subscript):
