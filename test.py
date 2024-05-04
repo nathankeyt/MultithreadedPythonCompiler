@@ -1,11 +1,13 @@
-#import "test_import.py" as a
+#import "test_import.py" as im
 
-print(a.a)
+a = 3
+im.a = 8
 
-a.b = 1
+def func(a):
+    print(a)
+    print(b)
+    print(im.a)
 
-def func2():
-    print(a.b)
-    print(a.a)
+b = 2
 
-func2()
+func(im.b)

@@ -2,74 +2,74 @@ Module(
     body=[
         Assign(
             targets=[
-                Name(id='t1035', ctx=Store())],
-            value=Name(id='t32', ctx=Load())),
+                Name(id='t90', ctx=Store())],
+            value=Name(id='t12', ctx=Load())),
         Assign(
             targets=[
-                Name(id='t1038', ctx=Store())],
+                Name(id='t93', ctx=Store())],
             value=Call(
                 func=Name(id='is_int', ctx=Load()),
                 args=[
-                    Name(id='t1035', ctx=Load())],
+                    Name(id='t90', ctx=Load())],
                 keywords=[])),
         If(
-            test=Name(id='t1038', ctx=Load()),
+            test=Name(id='t93', ctx=Load()),
             body=[
                 Assign(
                     targets=[
-                        Name(id='t1039', ctx=Store())],
+                        Name(id='t94', ctx=Store())],
                     value=Call(
                         func=Name(id='project_int', ctx=Load()),
                         args=[
-                            Name(id='t1035', ctx=Load())],
+                            Name(id='t90', ctx=Load())],
                         keywords=[])),
                 Assign(
                     targets=[
-                        Name(id='t1040', ctx=Store())],
+                        Name(id='t95', ctx=Store())],
                     value=UnaryOp(
                         op=USub(),
-                        operand=Name(id='t1039', ctx=Load()))),
+                        operand=Name(id='t94', ctx=Load()))),
                 Assign(
                     targets=[
-                        Name(id='t33', ctx=Store())],
+                        Name(id='t13', ctx=Store())],
                     value=Call(
                         func=Name(id='inject_int', ctx=Load()),
                         args=[
-                            Name(id='t1040', ctx=Load())],
+                            Name(id='t95', ctx=Load())],
                         keywords=[]))],
             orelse=[
                 Assign(
                     targets=[
-                        Name(id='t1041', ctx=Store())],
+                        Name(id='t96', ctx=Store())],
                     value=Call(
                         func=Name(id='is_bool', ctx=Load()),
                         args=[
-                            Name(id='t1035', ctx=Load())],
+                            Name(id='t90', ctx=Load())],
                         keywords=[])),
                 If(
-                    test=Name(id='t1041', ctx=Load()),
+                    test=Name(id='t96', ctx=Load()),
                     body=[
                         Assign(
                             targets=[
-                                Name(id='t1042', ctx=Store())],
+                                Name(id='t97', ctx=Store())],
                             value=Call(
                                 func=Name(id='project_bool', ctx=Load()),
                                 args=[
-                                    Name(id='t1035', ctx=Load())],
+                                    Name(id='t90', ctx=Load())],
                                 keywords=[])),
                         Assign(
                             targets=[
-                                Name(id='t1043', ctx=Store())],
+                                Name(id='t98', ctx=Store())],
                             value=UnaryOp(
                                 op=USub(),
-                                operand=Name(id='t1042', ctx=Load()))),
+                                operand=Name(id='t97', ctx=Load()))),
                         Assign(
                             targets=[
-                                Name(id='t33', ctx=Store())],
+                                Name(id='t13', ctx=Store())],
                             value=Call(
                                 func=Name(id='inject_int', ctx=Load()),
                                 args=[
-                                    Name(id='t1043', ctx=Load())],
+                                    Name(id='t98', ctx=Load())],
                                 keywords=[]))],
                     orelse=[
                         Expr(

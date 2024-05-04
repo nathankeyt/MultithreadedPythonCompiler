@@ -45,7 +45,10 @@ class Flattener():
         
         
         if debug:
+            open(f"debug/ast_post_uniqify.py", "w").write(ast.dump(n, indent=4))
             open(f"debug/post_uniqify.py", "w").write(ast.unparse(n))
+
+        #sys.exit("exit at uniq")
 
         self.get_free_vars(self.free_vars, n)
         self.heapify(n, self.free_vars, set())
@@ -289,6 +292,7 @@ class Flattener():
             #new_node, body_index = self.closure_convert(n.value, var_assignments, parent, body_index)
         elif isinstance(n, Subscript):
             new_node, body_index = self.closure_convert(n.value, var_assignments, parent, body_index, prev)
+            new_node, body_index = self.closure_convert(n.slice, var_assignments, parent, body_index, prev)
             
             if isinstance(n.value, Name) and n.value.id in var_assignments:
                 free_ver = n.value.id + "f"
@@ -384,8 +388,11 @@ class Flattener():
             else:
                 print(n.attr, self.dep_map[n.value.id][1])
                 sys.exit("Namespace or attribute does not exist.")
-        elif isinstance(n, Return) or isinstance(n, Expr) or isinstance(n, Subscript):
+        elif isinstance(n, Return) or isinstance(n, Expr):
             n.value = self.uniqify(n.value, var_assignments)[1]
+        elif isinstance(n, Subscript):
+            n.value = self.uniqify(n.value, var_assignments)[1]
+            n.slice = self.uniqify(n.slice, var_assignments)[1]
         elif isinstance(n, BinOp): 
             n.left = self.uniqify(n.left, var_assignments)[1]
             n.right = self.uniqify(n.right, var_assignments)[1]
@@ -830,8 +837,11 @@ class Flattener():
                 self.heapify(node, free_vars, indexed, prev)
         elif isinstance(n, Name) and (n.id in free_vars or n.id in indexed):
             return Subscript(n, Constant(0), Load())
-        elif isinstance(n, Return) or isinstance(n, Expr) or isinstance(n, Subscript):
+        elif isinstance(n, Return) or isinstance(n, Expr):
             n.value = self.heapify(n.value, free_vars, indexed, prev)
+        elif isinstance(n, Subscript):
+            n.value = self.heapify(n.value, free_vars, indexed, prev)
+            n.slice = self.heapify(n.slice, free_vars, indexed, prev)
         elif isinstance(n, BinOp): 
             n.left = self.heapify(n.left, free_vars, indexed, prev)
             n.right = self.heapify(n.right, free_vars, indexed, prev)
