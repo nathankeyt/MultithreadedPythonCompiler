@@ -1,11 +1,11 @@
-#import "test_import.py" as t
+#import "test_import.py" as a
 
-print(t.a)
+print(a.a)
 
-t.b = 1
+a.b = 1
 
 def func2():
-    print(t.b)
-    print(t.a)
+    print(a.b)
+    print(a.a)
 
 func2()

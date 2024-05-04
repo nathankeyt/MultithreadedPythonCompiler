@@ -15,9 +15,9 @@ def flatten_dependencies(file_tree, namespace):
 
     print(ast.dump(file_tree, indent=4))
         
-    return file_tree, namespace, f.free_vars, f.top_level_assignments
+    return file_tree, namespace, f.free_vars, f.top_level_assignments, f.getVariables()
 
-def compile_to_ir(file_tree, dep_trees, dep_map):
+def compile_to_ir(file_tree, dep_trees, dep_map, all_variables):
     
     f = Flattener(file_tree, "", dep_map)
     print(ast.dump(file_tree, indent=4))
@@ -27,18 +27,21 @@ def compile_to_ir(file_tree, dep_trees, dep_map):
     for dep_tree in dep_trees:
         combined_deps += dep_tree.body
 
-    file_tree.body.insert(0, combined_deps)
+    file_tree.body = combined_deps + file_tree.body
      
     open(f"debug/ast_post_combine.py", "w").write(ast.dump(file_tree, indent=4))
     open(f"debug/post_combine.py", "w").write(ast.unparse(file_tree))
     
     funcs, curr_lbl = func_create(file_tree, 0)
-    '''
+
+    print(funcs)
+    
     func_ir = []
 
     func_names = set()
 
     variables = f.getVariables()
+    variables += list(all_variables)
     
     for i, func in enumerate(funcs):
         new_graph = Graph([])
@@ -81,10 +84,9 @@ def compile_to_ir(file_tree, dep_trees, dep_map):
 
     
     assembly = generate_assembly([ir_graph] + func_ir, inter_graphs, func_names)
-   
-    binary_file = open(f"{os.path.splitext(file)[0]}.s", "w") # create .s file
-    binary_file.write(assembly)
-    '''
+    
+    return assembly
+    
     
 def generate_assembly(ir_graphs, inter_graphs, func_names):
     assembly = f""
@@ -92,10 +94,12 @@ def generate_assembly(ir_graphs, inter_graphs, func_names):
     for graph1, graph2 in zip(ir_graphs, inter_graphs):
         ir_graph = graph1
         graph, stack_size = graph2
-        if ir_graph.vertices[0].value[0] == 't':
+        split_graph = ir_graph.vertices[0].value.split('.')
+        if split_graph[-1][0] == 't':
             assembly += f"{ir_graph.vertices[0].value}\n"
         for ir_node in ir_graph.vertices:
-            if ir_node.value[0] != 't' and ir_node.value != 'start':
+            split_node = ir_node.value.split('.')
+            if split_node[-1][0] != 't' and ir_node.value != 'start':
                 assembly += f"{ir_node.value}:\n"
             for i, ins in enumerate(ir_node.block):
                 if (ins[0] == "call"):
@@ -648,12 +652,17 @@ def compile(files):
         print(file_trees[i])
 
     dep_maps = {}
-    for i, (file_tree, namespace, free_vars, var_mappings) in enumerate(file_trees[:-1]):
+    all_variables = set()
+    for i, (file_tree, namespace, free_vars, var_mappings, variables) in enumerate(file_trees[:-1]):
         dep_maps[namespace] = (free_vars, var_mappings)
+        all_variables.update(variables)
         file_trees[i] = file_tree
 
 
-    compile_to_ir(file_trees[-1][0], file_trees[:-1], dep_maps)
+    assembly = compile_to_ir(file_trees[-1][0], file_trees[:-1], dep_maps, all_variables)
+
+    binary_file = open(f"{os.path.splitext(files[0])[0]}.s", "w") # create .s file
+    binary_file.write(assembly)
 
         
 def check_dependencies(file_tree, files):
