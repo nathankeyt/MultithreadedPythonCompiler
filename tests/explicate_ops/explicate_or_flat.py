@@ -1,7 +1,7 @@
-t3 = t1
-t5 = t2
-t8 = is_true(t3)
-if t8:
-    t0 = t3
+t482 = t29
+t484 = t32
+t487 = is_true(t482)
+if t487:
+    t33 = t482
 else:
-    t0 = t5
+    t33 = t484

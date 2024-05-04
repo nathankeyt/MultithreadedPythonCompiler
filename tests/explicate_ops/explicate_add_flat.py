@@ -1,51 +1,51 @@
-t16 = t2
-t18 = t3
-t21 = is_int(t16)
-if t21:
-    t22 = is_int(t18)
-    if t22:
-        t23 = project_int(t16)
-        t24 = project_int(t18)
-        t25 = t23 + t24
-        t4 = inject_int(t25)
+t596 = t0
+t598 = t41
+t601 = is_int(t596)
+if t601:
+    t602 = is_int(t598)
+    if t602:
+        t603 = project_int(t596)
+        t604 = project_int(t598)
+        t605 = t603 + t604
+        t0 = inject_int(t605)
     else:
-        t26 = is_bool(t18)
-        if t26:
-            t27 = project_int(t16)
-            t28 = project_bool(t18)
-            t29 = t27 + t28
-            t4 = inject_int(t29)
+        t606 = is_bool(t598)
+        if t606:
+            t607 = project_int(t596)
+            t608 = project_bool(t598)
+            t609 = t607 + t608
+            t0 = inject_int(t609)
         else:
             throw_type_error()
 else:
-    t30 = is_bool(t16)
-    if t30:
-        t31 = is_int(t18)
-        if t31:
-            t32 = project_bool(t16)
-            t33 = project_int(t18)
-            t34 = t32 + t33
-            t4 = inject_int(t34)
+    t610 = is_bool(t596)
+    if t610:
+        t611 = is_int(t598)
+        if t611:
+            t612 = project_bool(t596)
+            t613 = project_int(t598)
+            t614 = t612 + t613
+            t0 = inject_int(t614)
         else:
-            t35 = is_bool(t18)
-            if t35:
-                t36 = project_bool(t16)
-                t37 = project_bool(t18)
-                t38 = t36 + t37
-                t4 = inject_int(t38)
+            t615 = is_bool(t598)
+            if t615:
+                t616 = project_bool(t596)
+                t617 = project_bool(t598)
+                t618 = t616 + t617
+                t0 = inject_int(t618)
             else:
                 throw_type_error()
     else:
-        t39 = is_int(t18)
-        if t39:
+        t619 = is_int(t598)
+        if t619:
             throw_type_error()
-        t40 = is_int(t18)
-        if t40:
+        t620 = is_int(t598)
+        if t620:
             throw_type_error()
         else:
-            t41 = is_big(t18)
-            if t41:
-                t42 = project_big(t16)
-                t43 = project_big(t18)
-                t44 = add(t42, t43)
-                t4 = inject_big(t44)
+            t621 = is_big(t598)
+            if t621:
+                t622 = project_big(t596)
+                t623 = project_big(t598)
+                t624 = add(t622, t623)
+                t0 = inject_big(t624)

@@ -1,6 +1,6 @@
-t5 = t0
-t8 = is_true(t5)
-if t8:
-    t1 = inject_bool(0)
+t691 = t4
+t694 = is_true(t691)
+if t694:
+    t42 = inject_bool(0)
 else:
-    t1 = inject_bool(1)
+    t42 = inject_bool(1)
