@@ -18,11 +18,18 @@ class Flattener():
         self.crossed_off_vars = set()
         self.funcs_to_free_count = {}
         self.top_level_assignments = {}
-        self.namespace = namespace
         self.dep_map = dep_map
+        self.dep_vars = set()
+        
+        if (namespace):
+            self.var_title = namespace + '.t'
+        else:
+            self.var_title = 't'
 
         for free_vars, var_mappings in dep_map.values():
             self.free_vars.update(free_vars)
+            for var in var_mappings.values():
+                self.dep_vars.add(var)
 
         if debug:
             open(f"debug/ast_original.py", "w").write(ast.dump(n, indent=4))
@@ -42,6 +49,7 @@ class Flattener():
         ast.fix_missing_locations(n)
 
         if debug:
+            open(f"debug/ast_post_heapify.py", "w").write(ast.dump(n, indent=4))
             open(f"debug/post_heapify.py", "w").write(ast.unparse(n))
         
         self.closure_convert(n)
@@ -68,7 +76,6 @@ class Flattener():
             open(f"debug/ast_post_explicate.py", "w").write(ast.dump(n, indent=4))
             open(f"debug/post_explicate.py", "w").write(ast.unparse(n))
             print("passed explicate")
-
 
     def flatten(self, n, parent = [], body_index = 0, shouldFlatten = False):
         if isinstance(n, Module):
@@ -203,7 +210,7 @@ class Flattener():
 
             return (n, body_index)
         elif isinstance(n, IfExp):  
-            new_var = self.namespace + '.t' + str(self.var_count)
+            new_var = self.var_title + str(self.var_count)
             self.var_count += 1
             new_node = If(n.test, [Assign([Name(new_var, Store())], n.body)], [Assign([Name(new_var, Store())], n.orelse)])
             new_node, body_index = self.flatten(new_node, parent, body_index)
@@ -323,15 +330,15 @@ class Flattener():
 
             if (n.name in self.free_vars):
                 if n.name in var_assignments:
-                    parent.insert(body_index + insert_shift, Assign([Subscript(Subscript(Name(f"free_vars", Store()), Constant(var_assignments[n.name]), Load()), Constant(0), Store())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name(self.namespace + '.t' + str(self.var_count), Load()), List(free_var_list)], [])], [])))
+                    parent.insert(body_index + insert_shift, Assign([Subscript(Subscript(Name(f"free_vars", Store()), Constant(var_assignments[n.name]), Load()), Constant(0), Store())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name(self.var_title + str(self.var_count), Load()), List(free_var_list)], [])], [])))
                 else:
-                    parent.insert(body_index + insert_shift, Assign([Subscript(Name(n.name, Load()), Constant(0), Store())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name(self.namespace + '.t' + str(self.var_count), Load()), List(free_var_list)], [])], [])))
+                    parent.insert(body_index + insert_shift, Assign([Subscript(Name(n.name, Load()), Constant(0), Store())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name(self.var_title + str(self.var_count), Load()), List(free_var_list)], [])], [])))
             else:
                 if n.name in var_assignments:
-                     parent.insert(body_index + insert_shift, Assign([Subscript(Name(f"free_vars", Store()), Constant(var_assignments[n.name]), Load())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name(self.namespace + '.t' + str(self.var_count), Load()), List(free_var_list)], [])], [])))
+                     parent.insert(body_index + insert_shift, Assign([Subscript(Name(f"free_vars", Store()), Constant(var_assignments[n.name]), Load())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name(self.var_title + str(self.var_count), Load()), List(free_var_list)], [])], [])))
                 else:
-                    parent.insert(body_index + insert_shift, Assign([Name(n.name, Load())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name(self.namespace + '.t' + str(self.var_count), Load()),  List(free_var_list)], [])], [])))
-            n.name = self.namespace + '.t' + str(self.var_count)
+                    parent.insert(body_index + insert_shift, Assign([Name(n.name, Load())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name(self.var_title + str(self.var_count), Load()),  List(free_var_list)], [])], [])))
+            n.name = self.var_title + str(self.var_count)
             parent.remove(n)
             self.root.body.insert(0, n)
 
@@ -365,12 +372,12 @@ class Flattener():
     def uniqify(self, n, var_assignments = {}):
         if (isinstance(n, Name) and n.id not in built_in_names):
             if (not (n.id in var_assignments)):
-                var_assignments[n.id] = self.namespace + '.t' + str(self.var_count)
+                var_assignments[n.id] = self.var_title + str(self.var_count)
                 self.var_count += 1
             n.id = var_assignments[n.id]
         elif isinstance(n, Attribute):
             if (isinstance(n.value, Name) and n.value.id in self.dep_map and n.attr in self.dep_map[n.value.id][1]):
-                return var_assignments, Name(self.dep_map[n.value.id][1][n.attr])
+                return var_assignments, Name(self.dep_map[n.value.id][1][n.attr], n.ctx)
             else:
                 print(n.attr, self.dep_map[n.value.id][1])
                 sys.exit("Namespace or attribute does not exist.")
@@ -421,7 +428,7 @@ class Flattener():
             n.value = self.uniqify(n.value, var_assignments)[1]
         elif isinstance(n, FunctionDef):
             if (not (n.name in var_assignments)):
-                var_assignments[n.name] = self.namespace + '.t' + str(self.var_count)
+                var_assignments[n.name] = self.var_title + str(self.var_count)
                 self.var_count += 1
             n.name = var_assignments[n.name]
 
@@ -431,7 +438,7 @@ class Flattener():
 
             for free_var in free_vars:
                 if (not (free_var in var_assignments)):
-                    var_assignments[free_var] = self.namespace + '.t' + str(self.var_count)
+                    var_assignments[free_var] = self.var_title + str(self.var_count)
                     self.var_count += 1
 
             for key in var_assignments.keys():
@@ -444,7 +451,7 @@ class Flattener():
 
             for arg in n.args.args:
                 if (not (arg.arg in sub_var_assignments)):
-                    sub_var_assignments[arg.arg] = self.namespace + '.t' + str(self.var_count)
+                    sub_var_assignments[arg.arg] = self.var_title + str(self.var_count)
                     self.var_count += 1
                 arg.arg = sub_var_assignments[arg.arg]
                         
@@ -459,7 +466,7 @@ class Flattener():
     def reassignVars(self, n):
         if (isinstance(n, Name) and n.id not in built_in_names):
             if (not (n.id in self.pre_assignments)):
-                self.pre_assignments[n.id] = self.namespace + '.t' + str(self.var_count)
+                self.pre_assignments[n.id] = self.var_title + str(self.var_count)
                 self.var_count += 1
             n.id = self.pre_assignments[n.id]
         
@@ -472,14 +479,14 @@ class Flattener():
 
     def flattenNode(self, n, parent, body_index, shouldFlatten):
         if (shouldFlatten):
-            print(self.namespace + '.t' + str(self.var_count), body_index, parent)
-            parent.insert(body_index, Assign([Name(self.namespace + '.t' + str(self.var_count), Store())], n))
+            print(self.var_title + str(self.var_count), body_index, parent)
+            parent.insert(body_index, Assign([Name(self.var_title + str(self.var_count), Store())], n))
             self.var_count += 1
-            return (ast.copy_location(Name(self.namespace + '.t' + str(self.var_count - 1), ast.Load()), n), body_index + 1)
+            return (ast.copy_location(Name(self.var_title + str(self.var_count - 1), ast.Load()), n), body_index + 1)
         return (n, body_index)
 
     def getVariables(self):
-        return [self.namespace + '.t' + str(i) for i in range(0, self.var_count)] + ['free_vars']
+        return [self.var_title + str(i) for i in range(0, self.var_count)] + ['free_vars']
 
     def getFreeVars(self):
         return self.free_vars
@@ -709,14 +716,14 @@ class Flattener():
         tmp1 = file_tree.body[0]
         if (isinstance(tmp1, Assign) and isinstance(tmp1.value, Name)):
             print(tmp1.value.id)
-            sub_name = self.namespace + '.t' + str(int(tmp1.value.id[1:]) + 1)
+            sub_name = self.var_title + str(int(tmp1.value.id[1:]) + 1)
             print(sub_name)
             tmp1.value = sub_var_1
 
         tmp2 = file_tree.body[1]
         if (isinstance(tmp2, Assign) and isinstance(tmp2.value, Name)):
             print(tmp2.value.id)
-            sub_name = self.namespace + '.t' + str(int(tmp2.value.id[1:]) + 1)
+            sub_name = self.var_title + str(int(tmp2.value.id[1:]) + 1)
             print(sub_name)
             tmp2.value = sub_var_2
 
@@ -798,7 +805,11 @@ class Flattener():
             for free_var in local_free_vars:
                 if free_var not in self.crossed_off_vars:
                     self.crossed_off_vars.add(free_var)
-                    parent.body.insert(0, Assign([Name(free_var, Store())], List([Constant(0)])))
+
+                    if (free_var in self.dep_vars):
+                        parent.body.insert(0, Assign([Name(free_var, Store())], List([Name(free_var, Load())])))
+                    else:
+                        parent.body.insert(0, Assign([Name(free_var, Store())], List([Constant(0)])))
 
             lst.update(local_free_vars)
             for node in n.body.copy():
@@ -809,12 +820,12 @@ class Flattener():
     
     def heapify(self, n: AST, free_vars: set(), indexed: set(), prev = None):
         if isinstance(n, Module):
-            for free_vars, var_mappings in self.dep_map.values():
-                indexed.update(free_vars)
+            for free_var_list, var_mappings in self.dep_map.values():
+                indexed.update(free_var_list)
 
             for node in ast.iter_child_nodes(n):
                 self.heapify(node, free_vars, indexed, prev)
-        if isinstance(n, Name) and (n.id in free_vars or n.id in indexed):
+        elif isinstance(n, Name) and (n.id in free_vars or n.id in indexed):
             return Subscript(n, Constant(0), Load())
         elif isinstance(n, Return) or isinstance(n, Expr) or isinstance(n, Subscript):
             n.value = self.heapify(n.value, free_vars, indexed, prev)
@@ -860,13 +871,17 @@ class Flattener():
                 n.values[i] = self.heapify(value, free_vars, indexed, prev)
         elif isinstance(n, Assign):
             flag = True
+            print("indexed:", indexed)
+            print("free_vars:", free_vars)
             if isinstance(n.targets[0], Name) and n.targets[0].id in free_vars:
-                if n.targets[0].id not in indexed: 
+                if n.targets[0].id not in indexed:
                     if isinstance(prev, FunctionDef):
                         for arg in prev.args.args:
                             if n.targets[0].id == arg.arg and isinstance(n.value, List):
                                 flag = False
                                 n.value.elts[0] = Name(arg.arg, Load())
+                    elif n.targets[0].id in self.dep_vars:
+                        flag = False
                     indexed.add(n.targets[0].id)
                 else:
                     n.targets[0] = Subscript(n.targets[0], Constant(0), Load())
