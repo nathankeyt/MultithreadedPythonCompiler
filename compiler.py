@@ -17,13 +17,23 @@ def flatten_dependencies(file_tree, namespace):
         
     return file_tree, namespace, f.free_vars, f.top_level_assignments
 
-def compile_to_ir(file_tree, dep_map):
+def compile_to_ir(file_tree, dep_trees, dep_map):
     
     f = Flattener(file_tree, "", dep_map)
     print(ast.dump(file_tree, indent=4))
     
-    '''
+    combined_deps = []
+
+    for dep_tree in dep_trees:
+        combined_deps += dep_tree.body
+
+    file_tree.body.insert(0, combined_deps)
+     
+    open(f"debug/ast_post_combine.py", "w").write(ast.dump(file_tree, indent=4))
+    open(f"debug/post_combine.py", "w").write(ast.unparse(file_tree))
+    
     funcs, curr_lbl = func_create(file_tree, 0)
+    '''
     func_ir = []
 
     func_names = set()
@@ -638,11 +648,12 @@ def compile(files):
         print(file_trees[i])
 
     dep_maps = {}
-    for file_tree, namespace, free_vars, var_mappings in file_trees[:-1]:
+    for i, (file_tree, namespace, free_vars, var_mappings) in enumerate(file_trees[:-1]):
         dep_maps[namespace] = (free_vars, var_mappings)
-        print(dep_maps)
+        file_trees[i] = file_tree
 
-    compile_to_ir(file_trees[-1][0], dep_maps)
+
+    compile_to_ir(file_trees[-1][0], file_trees[:-1], dep_maps)
 
         
 def check_dependencies(file_tree, files):
