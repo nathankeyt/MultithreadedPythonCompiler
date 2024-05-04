@@ -20,6 +20,7 @@ class Flattener():
         self.top_level_assignments = {}
         self.dep_map = dep_map
         self.dep_vars = set()
+        self.dep_free_vars = set()
         
         if (namespace):
             self.var_title = namespace + '.t'
@@ -28,8 +29,10 @@ class Flattener():
 
         for free_vars, var_mappings in dep_map.values():
             self.free_vars.update(free_vars)
+            self.dep_free_vars.update(free_vars)
             for var in var_mappings.values():
                 self.dep_vars.add(var)
+            
 
         if debug:
             open(f"debug/ast_original.py", "w").write(ast.dump(n, indent=4))
@@ -803,7 +806,7 @@ class Flattener():
             local_free_vars = self.get_free_and_bound_vars(n, set(), set())[0]
             
             for free_var in local_free_vars:
-                if free_var not in self.crossed_off_vars:
+                if free_var not in self.crossed_off_vars and free_var not in self.dep_free_vars:
                     self.crossed_off_vars.add(free_var)
 
                     if (free_var in self.dep_vars):
