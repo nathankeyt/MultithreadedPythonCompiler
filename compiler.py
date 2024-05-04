@@ -14,13 +14,8 @@ def flatten_dependencies(file_tree, namespace):
     f = Flattener(file_tree, namespace) # frontend
 
     print(ast.dump(file_tree, indent=4))
-
-    free_var_assignments = {}
-    for key, var in f.top_level_assignments.items():
-        if var in f.free_vars:
-            free_var_assignments[key] = var
         
-    return file_tree, namespace, free_var_assignments
+    return file_tree, namespace, f.free_vars, f.top_level_assignments
 
 def compile_to_ir(file_tree, dep_map):
     
@@ -640,11 +635,11 @@ def compile(files):
     
     for i, (file_tree, namespace) in enumerate(file_trees[:-1]):
         file_trees[i] = flatten_dependencies(file_tree, namespace)
-        print(file_trees[i][2])
+        print(file_trees[i])
 
     dep_maps = {}
-    for file_tree, namespace, mappings in file_trees[:-1]:
-        dep_maps[namespace] = mappings
+    for file_tree, namespace, free_vars, var_mappings in file_trees[:-1]:
+        dep_maps[namespace] = (free_vars, var_mappings)
         print(dep_maps)
 
     compile_to_ir(file_trees[-1][0], dep_maps)

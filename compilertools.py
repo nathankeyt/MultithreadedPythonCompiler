@@ -19,14 +19,14 @@ class Flattener():
         self.funcs_to_free_count = {}
         self.top_level_assignments = {}
         self.namespace = namespace
-        self.dep_map = {}
+        self.dep_map = dep_map
 
         if debug:
             open(f"debug/ast_original.py", "w").write(ast.dump(n, indent=4))
             print("initialized flattener")
 
         self.unify_defs(n, [0])
-        self.top_level_assignments = self.uniqify(n, {})
+        self.top_level_assignments = self.uniqify(n, {})[0]
         ast.fix_missing_locations(n)
 
         
@@ -365,6 +365,57 @@ class Flattener():
                 var_assignments[n.id] = self.namespace + '.t' + str(self.var_count)
                 self.var_count += 1
             n.id = var_assignments[n.id]
+        elif isinstance(n, Attribute):
+            if (isinstance(n.value, Name) and n.value.id in self.dep_map and n.attr in self.dep_map[n.value.id][1]):
+                return var_assignments, Name(self.dep_map[n.value.id][1][n.attr])
+            else:
+                print(n.attr, self.dep_map[n.value.id][1])
+                sys.exit("Namespace or attribute does not exist.")
+        elif isinstance(n, Return) or isinstance(n, Expr) or isinstance(n, Subscript):
+            n.value = self.uniqify(n.value, var_assignments)[1]
+        elif isinstance(n, BinOp): 
+            n.left = self.uniqify(n.left, var_assignments)[1]
+            n.right = self.uniqify(n.right, var_assignments)[1]
+        elif isinstance(n, BoolOp):
+            n.values[0] = self.uniqify(n.values[0], var_assignments)[1]
+            n.values[1] = self.uniqify(n.values[1], var_assignments)[1]
+        elif isinstance(n, UnaryOp):
+            n.operand = self.uniqify(n.operand, var_assignments)[1]
+        elif isinstance(n, Call):
+            n.func = self.uniqify(n.func, var_assignments)[1]
+
+            for i, arg in enumerate(n.args):
+                n.args[i] = self.uniqify(arg, var_assignments)[1]
+        elif isinstance(n, Expr):
+            n.operand = self.uniqify(n.operand, var_assignments)[1]
+        elif isinstance(n, While):
+            n.test = self.uniqify(n.test, var_assignments)[1]
+
+            for i, child in enumerate(n.body):
+                n.body[i] = self.uniqify(child, var_assignments)[1]
+        elif isinstance(n, If):
+            n.test = self.uniqify(n.test, var_assignments)[1]
+
+            for i, child in enumerate(n.body):
+                n.body[i] = self.uniqify(child, var_assignments)[1]
+
+            for i, child in enumerate(n.orelse):
+                n.orelse[i] = self.uniqify(child, var_assignments)[1]
+        elif isinstance(n, IfExp):
+            n.test = self.uniqify(n.test, var_assignments)[1]
+            n.body = self.uniqify(n.body, var_assignments)[1]
+            n.orelse = self.uniqify(n.orelse, var_assignments)[1]
+        elif isinstance(n, List):
+            for i, elt in enumerate(n.elts):
+                n.elts[i] = self.uniqify(elt, var_assignments)[1]
+        elif isinstance(n, Dict):
+            for i, key in enumerate(n.keys):
+                n.keys[i] = self.uniqify(key, var_assignments)[1]
+            for i, value in enumerate(n.values):
+                n.values[i] = self.uniqify(value, var_assignments)[1]
+        elif isinstance(n, Assign):
+            n.targets[0] = self.uniqify(n.targets[0], var_assignments)[1]
+            n.value = self.uniqify(n.value, var_assignments)[1]
         elif isinstance(n, FunctionDef):
             if (not (n.name in var_assignments)):
                 var_assignments[n.name] = self.namespace + '.t' + str(self.var_count)
@@ -400,7 +451,7 @@ class Flattener():
             for child_node in ast.iter_child_nodes(n):
                 self.uniqify(child_node, var_assignments)
 
-        return var_assignments
+        return var_assignments, n
 
     def reassignVars(self, n):
         if (isinstance(n, Name) and n.id not in built_in_names):
