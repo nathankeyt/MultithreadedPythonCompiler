@@ -7,7 +7,7 @@ built_in_names = {'print', 'int', 'set_free_vars' 'bool', 'list', 'dict', 'creat
 'eval', 'input', 'create_dict'}
 
 class Flattener():
-    def __init__(self, n: AST, namespace="", debug=True):
+    def __init__(self, n: AST, namespace="", dep_map={}, debug=True):
         self.root = n # create new tree
         self.var_count = 0
         self.pre_assignments = {}
@@ -19,6 +19,7 @@ class Flattener():
         self.funcs_to_free_count = {}
         self.top_level_assignments = {}
         self.namespace = namespace
+        self.dep_map = {}
 
         if debug:
             open(f"debug/ast_original.py", "w").write(ast.dump(n, indent=4))

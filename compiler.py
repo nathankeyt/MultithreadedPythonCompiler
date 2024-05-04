@@ -10,11 +10,7 @@ variables = []
 pre_allocations = {}
 MODULES_PATH = "./modules/"
 
-def compile_to_ir(file_tree, namespace):
-    
-    # print(ast.dump(file_tree, indent=4))
-    # print(ast.dump(file_tree1, indent=4))
-   
+def flatten_dependencies(file_tree, namespace):
     f = Flattener(file_tree, namespace) # frontend
 
     print(ast.dump(file_tree, indent=4))
@@ -24,8 +20,13 @@ def compile_to_ir(file_tree, namespace):
         if var in f.free_vars:
             free_var_assignments[key] = var
         
+    return file_tree, namespace, free_var_assignments
 
-    return free_var_assignments
+def compile_to_ir(file_tree, dep_map):
+    
+    f = Flattener(file_tree, "", dep_map)
+    print(ast.dump(file_tree, indent=4))
+    
     '''
     funcs, curr_lbl = func_create(file_tree, 0)
     func_ir = []
@@ -618,30 +619,35 @@ def pretty_print(ir): # prints ir but pretty
 def compile(files):
     file_trees = []
     for file in files:
+        dependency_files = []
         with open(file) as f:
-            dependency_files = []
             for line in f:
                 broken_line = line.split(" ")
                 if (len(broken_line) == 4 and broken_line[0] == "#import"):
                     dependency_files.append((broken_line[1][1:-1], broken_line[3][:-1]))
             
-            print(dependency_files)
-
-            for dep_file, namespace in dependency_files:
-                with open(dep_file) as dep_f:
-                    file_to_compile = dep_f.read()
-                    file_tree = ast.parse(file_to_compile)
-                    file_trees.append((file_tree, namespace))
-                    dep_f.close()
-            
-            file_to_compile = f.read()
-            file_tree = ast.parse(file_to_compile)
-            file_trees.append(file_tree)
             f.close()
+        
+        print(dependency_files)
 
-    for file_tree, namespace in file_trees[:-1]:
-        print(compile_to_ir(file_tree, namespace))
+        for file, namespace in dependency_files + [(file, "")]:
+            with open(file) as f:
+                file_to_compile = f.read()
+                file_tree = ast.parse(file_to_compile)
+                file_trees.append((file_tree, namespace))
+                f.close()
+
     
+    for i, (file_tree, namespace) in enumerate(file_trees[:-1]):
+        file_trees[i] = flatten_dependencies(file_tree, namespace)
+        print(file_trees[i][2])
+
+    dep_maps = {}
+    for file_tree, namespace, mappings in file_trees[:-1]:
+        dep_maps[namespace] = mappings
+        print(dep_maps)
+
+    compile_to_ir(file_trees[-1][0], dep_maps)
 
         
 def check_dependencies(file_tree, files):
