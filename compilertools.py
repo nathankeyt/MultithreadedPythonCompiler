@@ -7,7 +7,7 @@ built_in_names = {'print', 'int', 'set_free_vars' 'bool', 'list', 'dict', 'creat
 'eval', 'input', 'create_dict'}
 
 class Flattener():
-    def __init__(self, n: AST, debug=True):
+    def __init__(self, n: AST, namespace="", debug=True):
         self.root = n # create new tree
         self.var_count = 0
         self.pre_assignments = {}
@@ -17,13 +17,15 @@ class Flattener():
         self.free_var_count = 0
         self.crossed_off_vars = set()
         self.funcs_to_free_count = {}
+        self.top_level_assignments = {}
+        self.namespace = namespace
 
         if debug:
             open(f"debug/ast_original.py", "w").write(ast.dump(n, indent=4))
             print("initialized flattener")
 
         self.unify_defs(n, [0])
-        self.uniqify(n, {})
+        self.top_level_assignments = self.uniqify(n, {})
         ast.fix_missing_locations(n)
 
         
@@ -197,7 +199,7 @@ class Flattener():
 
             return (n, body_index)
         elif isinstance(n, IfExp):  
-            new_var = 't' + str(self.var_count)
+            new_var = self.namespace + '.t' + str(self.var_count)
             self.var_count += 1
             new_node = If(n.test, [Assign([Name(new_var, Store())], n.body)], [Assign([Name(new_var, Store())], n.orelse)])
             new_node, body_index = self.flatten(new_node, parent, body_index)
@@ -317,15 +319,15 @@ class Flattener():
 
             if (n.name in self.free_vars):
                 if n.name in var_assignments:
-                    parent.insert(body_index + insert_shift, Assign([Subscript(Subscript(Name(f"free_vars", Store()), Constant(var_assignments[n.name]), Load()), Constant(0), Store())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name('t' + str(self.var_count), Load()), List(free_var_list)], [])], [])))
+                    parent.insert(body_index + insert_shift, Assign([Subscript(Subscript(Name(f"free_vars", Store()), Constant(var_assignments[n.name]), Load()), Constant(0), Store())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name(self.namespace + '.t' + str(self.var_count), Load()), List(free_var_list)], [])], [])))
                 else:
-                    parent.insert(body_index + insert_shift, Assign([Subscript(Name(n.name, Load()), Constant(0), Store())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name('t' + str(self.var_count), Load()), List(free_var_list)], [])], [])))
+                    parent.insert(body_index + insert_shift, Assign([Subscript(Name(n.name, Load()), Constant(0), Store())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name(self.namespace + '.t' + str(self.var_count), Load()), List(free_var_list)], [])], [])))
             else:
                 if n.name in var_assignments:
-                     parent.insert(body_index + insert_shift, Assign([Subscript(Name(f"free_vars", Store()), Constant(var_assignments[n.name]), Load())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name('t' + str(self.var_count), Load()), List(free_var_list)], [])], [])))
+                     parent.insert(body_index + insert_shift, Assign([Subscript(Name(f"free_vars", Store()), Constant(var_assignments[n.name]), Load())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name(self.namespace + '.t' + str(self.var_count), Load()), List(free_var_list)], [])], [])))
                 else:
-                    parent.insert(body_index + insert_shift, Assign([Name(n.name, Load())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name('t' + str(self.var_count), Load()),  List(free_var_list)], [])], [])))
-            n.name = 't' + str(self.var_count)
+                    parent.insert(body_index + insert_shift, Assign([Name(n.name, Load())], Call(Name('inject_big', Load()), [Call(Name('create_closure', Load()), [Name(self.namespace + '.t' + str(self.var_count), Load()),  List(free_var_list)], [])], [])))
+            n.name = self.namespace + '.t' + str(self.var_count)
             parent.remove(n)
             self.root.body.insert(0, n)
 
@@ -359,12 +361,12 @@ class Flattener():
     def uniqify(self, n, var_assignments = {}):
         if (isinstance(n, Name) and n.id not in built_in_names):
             if (not (n.id in var_assignments)):
-                var_assignments[n.id] = 't' + str(self.var_count)
+                var_assignments[n.id] = self.namespace + '.t' + str(self.var_count)
                 self.var_count += 1
             n.id = var_assignments[n.id]
         elif isinstance(n, FunctionDef):
             if (not (n.name in var_assignments)):
-                var_assignments[n.name] = 't' + str(self.var_count)
+                var_assignments[n.name] = self.namespace + '.t' + str(self.var_count)
                 self.var_count += 1
             n.name = var_assignments[n.name]
 
@@ -374,7 +376,7 @@ class Flattener():
 
             for free_var in free_vars:
                 if (not (free_var in var_assignments)):
-                    var_assignments[free_var] = 't' + str(self.var_count)
+                    var_assignments[free_var] = self.namespace + '.t' + str(self.var_count)
                     self.var_count += 1
 
             for key in var_assignments.keys():
@@ -387,7 +389,7 @@ class Flattener():
 
             for arg in n.args.args:
                 if (not (arg.arg in sub_var_assignments)):
-                    sub_var_assignments[arg.arg] = 't' + str(self.var_count)
+                    sub_var_assignments[arg.arg] = self.namespace + '.t' + str(self.var_count)
                     self.var_count += 1
                 arg.arg = sub_var_assignments[arg.arg]
                         
@@ -397,10 +399,12 @@ class Flattener():
             for child_node in ast.iter_child_nodes(n):
                 self.uniqify(child_node, var_assignments)
 
+        return var_assignments
+
     def reassignVars(self, n):
         if (isinstance(n, Name) and n.id not in built_in_names):
             if (not (n.id in self.pre_assignments)):
-                self.pre_assignments[n.id] = 't' + str(self.var_count)
+                self.pre_assignments[n.id] = self.namespace + '.t' + str(self.var_count)
                 self.var_count += 1
             n.id = self.pre_assignments[n.id]
         
@@ -413,14 +417,17 @@ class Flattener():
 
     def flattenNode(self, n, parent, body_index, shouldFlatten):
         if (shouldFlatten):
-            print('t' + str(self.var_count), body_index, parent)
-            parent.insert(body_index, Assign([Name('t' + str(self.var_count), Store())], n))
+            print(self.namespace + '.t' + str(self.var_count), body_index, parent)
+            parent.insert(body_index, Assign([Name(self.namespace + '.t' + str(self.var_count), Store())], n))
             self.var_count += 1
-            return (ast.copy_location(Name('t' + str(self.var_count - 1), ast.Load()), n), body_index + 1)
+            return (ast.copy_location(Name(self.namespace + '.t' + str(self.var_count - 1), ast.Load()), n), body_index + 1)
         return (n, body_index)
 
     def getVariables(self):
-        return ['t' + str(i) for i in range(0, self.var_count)] + ['free_vars']
+        return [self.namespace + '.t' + str(i) for i in range(0, self.var_count)] + ['free_vars']
+
+    def getFreeVars(self):
+        return self.free_vars
 
     def explicate_pass(self, n, parent = [], body_index = 0):
         if isinstance(n, Module):
@@ -546,7 +553,10 @@ class Flattener():
             return (n, body_index)
     
     def explicate(self, assign_node):
-        result_var_name = assign_node.targets[0].id
+        if (isinstance(assign_node.targets[0], Attribute)):
+            result_var_name = assign_node.targets[0].id
+        else:
+            result_var_name = assign_node.targets[0].id
         node = assign_node.value
 
         explicate_file = ''
@@ -644,14 +654,14 @@ class Flattener():
         tmp1 = file_tree.body[0]
         if (isinstance(tmp1, Assign) and isinstance(tmp1.value, Name)):
             print(tmp1.value.id)
-            sub_name = 't' + str(int(tmp1.value.id[1:]) + 1)
+            sub_name = self.namespace + '.t' + str(int(tmp1.value.id[1:]) + 1)
             print(sub_name)
             tmp1.value = sub_var_1
 
         tmp2 = file_tree.body[1]
         if (isinstance(tmp2, Assign) and isinstance(tmp2.value, Name)):
             print(tmp2.value.id)
-            sub_name = 't' + str(int(tmp2.value.id[1:]) + 1)
+            sub_name = self.namespace + '.t' + str(int(tmp2.value.id[1:]) + 1)
             print(sub_name)
             tmp2.value = sub_var_2
 

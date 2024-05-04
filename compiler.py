@@ -8,20 +8,25 @@ import queue
 
 variables = []
 pre_allocations = {}
+MODULES_PATH = "./modules/"
 
-def compile_to_ir(file):
-    with open(file) as f:
-        file_to_compile = f.read()
-        #file_tree = Parser().parse(file_to_compile) # parse
-        file_tree = ast.parse(file_to_compile) # parse
+def compile_to_ir(file_tree, namespace):
+    
     # print(ast.dump(file_tree, indent=4))
     # print(ast.dump(file_tree1, indent=4))
-    
-    f = Flattener(file_tree) # frontend
+   
+    f = Flattener(file_tree, namespace) # frontend
 
-    
     print(ast.dump(file_tree, indent=4))
-    
+
+    free_var_assignments = {}
+    for key, var in f.top_level_assignments.items():
+        if var in f.free_vars:
+            free_var_assignments[key] = var
+        
+
+    return free_var_assignments
+    '''
     funcs, curr_lbl = func_create(file_tree, 0)
     func_ir = []
 
@@ -46,6 +51,7 @@ def compile_to_ir(file):
     
     thread_val_tuples = []
 
+    # start threads
     for i, graph in enumerate(func_ir):
         q = queue.Queue()
         t = threading.Thread(target=assign_regs, args=(graph, funcs[i], variables.copy(), caller_reg_dict.copy(), q))
@@ -55,6 +61,7 @@ def compile_to_ir(file):
 
     inter_graphs = [assign_regs(ir_graph, file_tree, variables.copy(), reg_dict.copy())]
   
+    # join threads
     for i, graph in enumerate(func_ir):
         thread_val_tuples[i][0].join()
         inter_graphs.append(thread_val_tuples[i][1].get_nowait())
@@ -71,7 +78,7 @@ def compile_to_ir(file):
    
     binary_file = open(f"{os.path.splitext(file)[0]}.s", "w") # create .s file
     binary_file.write(assembly)
-    
+    '''
     
 def generate_assembly(ir_graphs, inter_graphs, func_names):
     assembly = f""
@@ -608,11 +615,49 @@ def pretty_print(ir): # prints ir but pretty
             print(f"    {ins}")
     print("]")
 
+def compile(files):
+    file_trees = []
+    for file in files:
+        with open(file) as f:
+            dependency_files = []
+            for line in f:
+                broken_line = line.split(" ")
+                if (len(broken_line) == 4 and broken_line[0] == "#import"):
+                    dependency_files.append((broken_line[1][1:-1], broken_line[3][:-1]))
+            
+            print(dependency_files)
+
+            for dep_file, namespace in dependency_files:
+                with open(dep_file) as dep_f:
+                    file_to_compile = dep_f.read()
+                    file_tree = ast.parse(file_to_compile)
+                    file_trees.append((file_tree, namespace))
+                    dep_f.close()
+            
+            file_to_compile = f.read()
+            file_tree = ast.parse(file_to_compile)
+            file_trees.append(file_tree)
+            f.close()
+
+    for file_tree, namespace in file_trees[:-1]:
+        print(compile_to_ir(file_tree, namespace))
+    
+
+        
+def check_dependencies(file_tree, files):
+    for child_node in ast.iter_child_nodes(file_tree):
+        if isinstance(child_node, Import):
+            for alias in child_node.names:
+                if ((alias.name + ".py") not in files):
+                    sys.exit("File dependency does not exist or was not passed")
+
+
 if __name__ == "__main__":
-    if len(os.sys.argv) != 2:
-        print("Usage: compiler.py <file_name>")
+    if len(os.sys.argv) < 2:
+        print("Usage: compiler.py <main_file>")
         os.sys.exit(-1)
-    compile_to_ir(os.sys.argv[1])
+    
+    compile(os.sys.argv[1:])
 
 """
     # flatast = open(f"ast_original.py", "w")
