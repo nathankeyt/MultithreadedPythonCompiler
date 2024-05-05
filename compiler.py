@@ -689,7 +689,7 @@ def compile_n_files(files):
                 print("file does not exist")
                 os.sys.exit(-1)
 
-        t = threading.Thread(target=compile_outer, args=(file))
+        t = threading.Thread(target=compile_outer, args=(file, ))
         print(f"started thread {t}")
         t.start()
         threads.append(t)
@@ -711,5 +711,5 @@ if __name__ == "__main__":
         print("Usage: compiler.py <file1> <file2> ...")
         os.sys.exit(-1)
 
-    compile_n_files(os.sys.argv)
+    compile_n_files(os.sys.argv[1:])
     # compile_outer(os.sys.argv[1])
