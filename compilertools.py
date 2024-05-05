@@ -40,7 +40,7 @@ class Flattener():
 
         if debug:
             open(f"debug/ast_original.py", "w").write(ast.dump(n, indent=4))
-            print("initialized flattener")
+            #print("initialized flattener")
 
         self.unify_defs(n, [0])
         self.top_level_assignments = self.uniqify(n, {})[0]
@@ -68,7 +68,7 @@ class Flattener():
         if debug:
             open(f"debug/ast_pre_flat.py", "w").write(ast.dump(n, indent=4))
             open(f"debug/pre_flat.py", "w").write(ast.unparse(n))
-            print("Passed: unify_defs, uniqify, heapify, closure_convert")
+            #print("Passed: unify_defs, uniqify, heapify, closure_convert")
 
         self.flatten(n)
         ast.fix_missing_locations(n)
@@ -76,7 +76,7 @@ class Flattener():
         if debug:
             open(f"debug/ast_post_flat.py", "w").write(ast.dump(n, indent=4))
             open(f"debug/post_flat.py", "w").write(ast.unparse(n))
-            print("passed flatten")
+            #print("passed flatten")
 
         self.explicate_pass(n)
         #self.uniqify(n)
@@ -85,14 +85,14 @@ class Flattener():
         if debug:
             open(f"debug/ast_post_explicate.py", "w").write(ast.dump(n, indent=4))
             open(f"debug/post_explicate.py", "w").write(ast.unparse(n))
-            print("passed explicate")
+            #print("passed explicate")
 
     def access_dict_ns(self, dic, key):
         if (self.namespace):
             key = self.namespace + '.' + key
-        print(dic)
+        #print(dic)
         if key in dic:
-            print(dic[key])
+            #print(dic[key])
             return dic[key]
         
         return None
@@ -254,9 +254,9 @@ class Flattener():
             sub_body_index = 0
             body_copy = n.body.copy()
             for index, node in enumerate(body_copy):
-                print("before", sub_body_index)
+                #print("before", sub_body_index)
                 sub_body_index = self.flatten(node, n.body, sub_body_index)[1]
-                print("after", sub_body_index)
+                #print("after", sub_body_index)
                 
                 sub_body_index += 1
 
@@ -321,7 +321,7 @@ class Flattener():
             var_count = 0
             free_vars, bound_vars = self.get_free_and_bound_vars(n, set(), set())
 
-            print("closure_convert", free_vars, bound_vars)
+            #print("closure_convert", free_vars, bound_vars)
 
             new_var_assignments = var_assignments.copy()
 
@@ -419,7 +419,7 @@ class Flattener():
             if (isinstance(n.value, Name) and self.in_dict_ns(self.dep_map, n.value.id) and n.attr in self.access_dict_ns(self.dep_map, n.value.id)[1]):
                 return var_assignments, Name(self.access_dict_ns(self.dep_map, n.value.id)[1][n.attr], n.ctx)
             else:
-                print(n.attr, n.value.id)
+                #print(n.attr, n.value.id)
                 sys.exit("Namespace or attribute does not exist.")
         elif isinstance(n, Return) or isinstance(n, Expr):
             n.value = self.uniqify(n.value, var_assignments)[1]
@@ -477,7 +477,7 @@ class Flattener():
 
             sub_var_assignments = {}
             free_vars, bound_vars = self.get_free_and_bound_vars(n, set(), set())
-            print("free and bound vars:", n.name, free_vars, bound_vars)
+            #print("free and bound vars:", n.name, free_vars, bound_vars)
 
             for free_var in free_vars:
                 if (not (free_var in var_assignments)):
@@ -488,7 +488,7 @@ class Flattener():
                 if key not in bound_vars:
                     sub_var_assignments[key] = var_assignments[key]
 
-            print("pre func var_assignments:", sub_var_assignments)
+            #print("pre func var_assignments:", sub_var_assignments)
 
             
 
@@ -522,7 +522,7 @@ class Flattener():
 
     def flattenNode(self, n, parent, body_index, shouldFlatten):
         if (shouldFlatten):
-            print(self.var_title + str(self.var_count), body_index, parent)
+            #print(self.var_title + str(self.var_count), body_index, parent)
             parent.insert(body_index, Assign([Name(self.var_title + str(self.var_count), Store())], n))
             self.var_count += 1
             return (ast.copy_location(Name(self.var_title + str(self.var_count - 1), ast.Load()), n), body_index + 1)
@@ -752,22 +752,22 @@ class Flattener():
         self.flatten(file_tree)
         self.shouldInject = True
 
-        print(ast.dump(file_tree, indent=4))
+        #print(ast.dump(file_tree, indent=4))
 
         sub_name = ''
 
         tmp1 = file_tree.body[0]
         if (isinstance(tmp1, Assign) and isinstance(tmp1.value, Name)):
-            print(tmp1.value.id)
+            #print(tmp1.value.id)
             sub_name = self.var_title + str(int(tmp1.value.id[1:]) + 1)
-            print(sub_name)
+            #print(sub_name)
             tmp1.value = sub_var_1
 
         tmp2 = file_tree.body[1]
         if (isinstance(tmp2, Assign) and isinstance(tmp2.value, Name)):
-            print(tmp2.value.id)
+            #print(tmp2.value.id)
             sub_name = self.var_title + str(int(tmp2.value.id[1:]) + 1)
-            print(sub_name)
+            #print(sub_name)
             tmp2.value = sub_var_2
 
         self.sub_explicate_tree(file_tree, sub_name, result_var_name)
@@ -807,7 +807,7 @@ class Flattener():
             new_func = FunctionDef('Lambda' + str(lambda_num[0]), args=n.args, body=[Return(n.body)], decorator_list=[])
             parent.insert(body_index, new_func)
             new_node = Name('Lambda' + str(lambda_num[0]), Load())
-            print(ast.dump(n, indent=4))
+            #print(ast.dump(n, indent=4))
             lambda_num[0] += 1
 
             self.unify_defs(new_func, lambda_num, parent, body_index)
@@ -815,7 +815,7 @@ class Flattener():
             return new_node, body_index + 1
         elif isinstance(n, While) or isinstance(n, FunctionDef):
             sub_body_index = 0
-            print(ast.dump(self.root, indent=4))
+            #print(ast.dump(self.root, indent=4))
             for child in n.body.copy():
                 new_node, sub_body_index = self.unify_defs(child, lambda_num, n.body, sub_body_index)
                 sub_body_index += 1
@@ -916,8 +916,8 @@ class Flattener():
                 n.values[i] = self.heapify(value, free_vars, indexed, prev)
         elif isinstance(n, Assign):
             flag = True
-            print("indexed:", indexed)
-            print("free_vars:", free_vars)
+            #print("indexed:", indexed)
+            #print("free_vars:", free_vars)
             if isinstance(n.targets[0], Name) and n.targets[0].id in free_vars:
                 if n.targets[0].id not in indexed:
                     if isinstance(prev, FunctionDef):

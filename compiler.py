@@ -13,7 +13,7 @@ MODULES_PATH = "./modules/"
 def flatten_dependencies(file_tree, namespace, dep_map):
     f = Flattener(file_tree, namespace, dep_map) # frontend
 
-    print(ast.dump(file_tree, indent=4))
+    #print(ast.dump(file_tree, indent=4))
         
     return file_tree, namespace, f.free_vars, f.top_level_assignments, f.getVariables()
 
@@ -34,7 +34,7 @@ def compile_to_ir(file_tree, dep_trees, dep_map, all_variables):
     
     funcs, curr_lbl = func_create(file_tree, 0)
 
-    print(funcs)
+    #print(funcs)
     
     func_ir = []
 
@@ -48,9 +48,9 @@ def compile_to_ir(file_tree, dep_trees, dep_map, all_variables):
         func_names.add(func_ir[i].vertices[0].value[:-1])
     
     ir, curr_lbl = convert_to_ir(file_tree, curr_lbl)
-    pretty_print(ir)
+    #pretty_print(ir)
     ir_graph = create_ir_graph(ir, Graph([]), False)
-    print(ir_graph)
+    #print(ir_graph)
     
 
     reg_dict = {f"%eax": 0, f"%ecx": 1, f"%edx": 2, f"%edi": 3, f"%ebx": 4, f"%esi": 5}
@@ -348,7 +348,7 @@ def assign_regs(ir_graph, file_tree, var_assignments, reg_dict, q = None):
                     new_reg = f"{stack_counter * -4}(%ebp)"
                     reg_dict[new_reg] = stack_counter + reg_count
                     stack_counter += 1
-                    print(stack_counter)
+                    #print(stack_counter)
                     reg_count = len(reg_dict)
 
                 node[1]['color'] = new_reg
@@ -452,7 +452,7 @@ def convert_to_ir(file_tree: AST, jmp_lbl = 0): # labels to keep track of if/whi
                     ir.append(['call', 'eval_input'])
                     ir.append(['movl', 'eval_input', var_id])
                 elif value.func.id == 'print': # edge case
-                    print('invalid syntax assign to func')
+                    #print('invalid syntax assign to func')
                     os.error(NotImplementedError)
                     os.sys.exit(-1)
                 else:
@@ -483,7 +483,7 @@ def convert_to_ir(file_tree: AST, jmp_lbl = 0): # labels to keep track of if/whi
                 ir.append([ops[value.ops[0].__class__], "%al"])
                 ir.append(['movzbl', '%al', var_id])
             else: # ignore all other cases
-                print(f'invalid syntax for assign')
+                #print(f'invalid syntax for assign')
                 os.error(NotImplementedError)
                 os.sys.exit(-1)
         elif isinstance(node, Expr): # calling of function (print and eval)
@@ -624,7 +624,7 @@ def pretty_print(ir): # prints ir but pretty
             print(f"    {ins}")
     print("]")
 
-def compile(file, namespace = ""):
+def compile(file, namespace = "", q = None):
     file_trees = []
     dep_map = {}
     all_variables = set()
@@ -640,17 +640,32 @@ def compile(file, namespace = ""):
         
         f.close()
     
-    print(dependency_files)
+    #print(dependency_files)
+    
+    thread_val_tuples = []
 
-    for dep_file, dep_namespace in dependency_files:
+    # start threads
+    for i, (dep_file, dep_namespace) in enumerate(dependency_files):
         if (namespace):
             new_namespace = namespace + "." + dep_namespace
         else:
             new_namespace = dep_namespace
-        new_file_trees, new_dep_map, new_vars = compile(dep_file, new_namespace)
+
+        new_q = queue.Queue()
+        t = threading.Thread(target=compile, args=(dep_file, new_namespace, new_q))
+        print("started file thread: ", i)
+        t.start()
+        thread_val_tuples.append((t, new_q))
+  
+    # join threads
+    for i, deps in enumerate(dependency_files):
+        thread_val_tuples[i][0].join()
+
+        new_file_trees, new_dep_map, new_vars = thread_val_tuples[i][1].get_nowait()
         file_trees += new_file_trees
         dep_map.update(new_dep_map)
         all_variables.update(new_vars)
+        print("joined file thread: ", i)
         
     with open(file) as f:
         file_to_compile = f.read()
@@ -664,6 +679,8 @@ def compile(file, namespace = ""):
 
         f.close()
 
+    if (q):
+        q.put_nowait((file_trees, dep_map, all_variables))
 
     return file_trees, dep_map, all_variables
 
