@@ -1,5 +1,5 @@
-#import "test_import.py" as im
-#import "nested_import.py" as ne
+#import "./import_files/test_import.py" as im
+#import "./import_files/nested_import.py" as ne
 
 im.do_something()
 

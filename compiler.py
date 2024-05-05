@@ -612,7 +612,7 @@ def pretty_print(ir): # prints ir but pretty
             print(f"    {ins}")
     print("]")
 
-def compile(file, namespace = "", q = None):
+def compile(file, namespace = "", directory = "", q = None):
     file_trees = []
     dep_map = {}
     all_variables = set()
@@ -622,7 +622,7 @@ def compile(file, namespace = "", q = None):
         for line in f:
             broken_line = line.split(" ")
             if (len(broken_line) == 4 and broken_line[0] == "#import"):
-                dependency_files.append((broken_line[1][1:-1], broken_line[3][:-1]))
+                dependency_files.append((directory + broken_line[1][1:-1], broken_line[3][:-1]))
             else:
                 break
         
@@ -640,7 +640,7 @@ def compile(file, namespace = "", q = None):
             new_namespace = dep_namespace
 
         new_q = queue.Queue()
-        t = threading.Thread(target=compile, args=(dep_file, new_namespace, new_q))
+        t = threading.Thread(target=compile, args=(dep_file, new_namespace, dep_file[0:dep_file.rfind('/') + 1], new_q))
         print("started file thread: ", i)
         t.start()
         thread_val_tuples.append((t, new_q))
