@@ -21,6 +21,7 @@ class Flattener():
         self.dep_map = dep_map
         self.dep_vars = set()
         self.dep_free_vars = set()
+        self.namespace = namespace
         
         if (namespace):
             self.var_title = namespace + '.t'
@@ -30,8 +31,11 @@ class Flattener():
         for free_vars, var_mappings in dep_map.values():
             self.free_vars.update(free_vars)
             self.dep_free_vars.update(free_vars)
+        
             for var in var_mappings.values():
                 self.dep_vars.add(var)
+
+        
             
 
         if debug:
@@ -82,6 +86,22 @@ class Flattener():
             open(f"debug/ast_post_explicate.py", "w").write(ast.dump(n, indent=4))
             open(f"debug/post_explicate.py", "w").write(ast.unparse(n))
             print("passed explicate")
+
+    def access_dict_ns(self, dic, key):
+        if (self.namespace):
+            key = self.namespace + '.' + key
+        print(dic)
+        if key in dic:
+            print(dic[key])
+            return dic[key]
+        
+        return None
+
+    def in_dict_ns(self, dic, key):
+        if (self.namespace):
+            key = self.namespace + '.' + key
+
+        return key in dic
 
     def flatten(self, n, parent = [], body_index = 0, shouldFlatten = False):
         if isinstance(n, Module):
@@ -383,10 +403,23 @@ class Flattener():
                 self.var_count += 1
             n.id = var_assignments[n.id]
         elif isinstance(n, Attribute):
-            if (isinstance(n.value, Name) and n.value.id in self.dep_map and n.attr in self.dep_map[n.value.id][1]):
-                return var_assignments, Name(self.dep_map[n.value.id][1][n.attr], n.ctx)
+            
+            def traverse_attr(n):
+                if isinstance(n, Attribute):
+                    result = traverse_attr(n.value)
+
+                    return result + "." + n.attr
+                elif isinstance(n, Name):
+                    return n.id
+
+                return ""
+
+            n.value = Name(traverse_attr(n.value), Load())
+                
+            if (isinstance(n.value, Name) and self.in_dict_ns(self.dep_map, n.value.id) and n.attr in self.access_dict_ns(self.dep_map, n.value.id)[1]):
+                return var_assignments, Name(self.access_dict_ns(self.dep_map, n.value.id)[1][n.attr], n.ctx)
             else:
-                print(n.attr, self.dep_map[n.value.id][1])
+                print(n.attr, n.value.id)
                 sys.exit("Namespace or attribute does not exist.")
         elif isinstance(n, Return) or isinstance(n, Expr):
             n.value = self.uniqify(n.value, var_assignments)[1]
@@ -830,8 +863,7 @@ class Flattener():
     
     def heapify(self, n: AST, free_vars: set(), indexed: set(), prev = None):
         if isinstance(n, Module):
-            for free_var_list, var_mappings in self.dep_map.values():
-                indexed.update(free_var_list)
+            indexed.update(self.dep_free_vars)
 
             for node in ast.iter_child_nodes(n):
                 self.heapify(node, free_vars, indexed, prev)

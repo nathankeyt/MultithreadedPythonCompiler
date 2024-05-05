@@ -10,8 +10,8 @@ variables = []
 pre_allocations = {}
 MODULES_PATH = "./modules/"
 
-def flatten_dependencies(file_tree, namespace):
-    f = Flattener(file_tree, namespace) # frontend
+def flatten_dependencies(file_tree, namespace, dep_map):
+    f = Flattener(file_tree, namespace, dep_map) # frontend
 
     print(ast.dump(file_tree, indent=4))
         
@@ -19,8 +19,8 @@ def flatten_dependencies(file_tree, namespace):
 
 def compile_to_ir(file_tree, dep_trees, dep_map, all_variables):
     
-    f = Flattener(file_tree, "", dep_map)
-    print(ast.dump(file_tree, indent=4))
+    #f = Flattener(file_tree, "", dep_map)
+    #print(ast.dump(file_tree, indent=4))
     
     combined_deps = []
 
@@ -40,8 +40,7 @@ def compile_to_ir(file_tree, dep_trees, dep_map, all_variables):
 
     func_names = set()
 
-    variables = f.getVariables()
-    variables += list(all_variables)
+    variables = list(all_variables)
     
     for i, func in enumerate(funcs):
         new_graph = Graph([])
@@ -625,46 +624,59 @@ def pretty_print(ir): # prints ir but pretty
             print(f"    {ins}")
     print("]")
 
-def compile(files):
+def compile(file, namespace = ""):
     file_trees = []
-    for file in files:
-        dependency_files = []
-        with open(file) as f:
-            for line in f:
-                broken_line = line.split(" ")
-                if (len(broken_line) == 4 and broken_line[0] == "#import"):
-                    dependency_files.append((broken_line[1][1:-1], broken_line[3][:-1]))
-            
-            f.close()
-        
-        print(dependency_files)
-
-        for file, namespace in dependency_files + [(file, "")]:
-            with open(file) as f:
-                file_to_compile = f.read()
-                file_tree = ast.parse(file_to_compile)
-                file_trees.append((file_tree, namespace))
-                f.close()
-
-    
-    for i, (file_tree, namespace) in enumerate(file_trees[:-1]):
-        file_trees[i] = flatten_dependencies(file_tree, namespace)
-        print(file_trees[i])
-
-    dep_maps = {}
+    dep_map = {}
     all_variables = set()
-    for i, (file_tree, namespace, free_vars, var_mappings, variables) in enumerate(file_trees[:-1]):
-        dep_maps[namespace] = (free_vars, var_mappings)
-        all_variables.update(variables)
-        file_trees[i] = file_tree
+
+    dependency_files = []
+    with open(file) as f:
+        for line in f:
+            broken_line = line.split(" ")
+            if (len(broken_line) == 4 and broken_line[0] == "#import"):
+                dependency_files.append((broken_line[1][1:-1], broken_line[3][:-1]))
+            else:
+                break
+        
+        f.close()
+    
+    print(dependency_files)
+
+    for dep_file, dep_namespace in dependency_files:
+        if (namespace):
+            new_namespace = namespace + "." + dep_namespace
+        else:
+            new_namespace = dep_namespace
+        new_file_trees, new_dep_map, new_vars = compile(dep_file, new_namespace)
+        file_trees += new_file_trees
+        dep_map.update(new_dep_map)
+        all_variables.update(new_vars)
+        
+    with open(file) as f:
+        file_to_compile = f.read()
+        file_tree = ast.parse(file_to_compile)
+        
+        file_tree, namespace, free_vars, var_mappings, new_vars = flatten_dependencies(file_tree, namespace, dep_map)
+
+        dep_map[namespace] = (free_vars, var_mappings)
+        all_variables.update(new_vars)
+        file_trees.append(file_tree)
+
+        f.close()
 
 
-    assembly = compile_to_ir(file_trees[-1][0], file_trees[:-1], dep_maps, all_variables)
+    return file_trees, dep_map, all_variables
 
-    binary_file = open(f"{os.path.splitext(files[0])[0]}.s", "w") # create .s file
+def compile_outer(file):
+    file_trees, dep_map, all_variables = compile(file)
+
+    assembly = compile_to_ir(file_trees[-1], file_trees[:-1], dep_map, all_variables)
+
+    binary_file = open(f"{os.path.splitext(file)[0]}.s", "w") # create .s file
     binary_file.write(assembly)
 
-        
+
+
 def check_dependencies(file_tree, files):
     for child_node in ast.iter_child_nodes(file_tree):
         if isinstance(child_node, Import):
@@ -678,7 +690,7 @@ if __name__ == "__main__":
         print("Usage: compiler.py <main_file>")
         os.sys.exit(-1)
     
-    compile(os.sys.argv[1:])
+    compile_outer(os.sys.argv[1])
 
 """
     # flatast = open(f"ast_original.py", "w")
