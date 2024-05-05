@@ -1,15 +1,15 @@
-t683 = t13
-t685 = t15
-t688 = is_true(t685)
-if t688:
-    t689 = is_true(t683)
-    if t689:
-        t16 = t685
+t83 = t0
+t85 = t1
+t88 = is_true(t85)
+if t88:
+    t89 = is_true(t83)
+    if t89:
+        t6 = t85
     else:
-        t16 = t683
+        t6 = t83
 else:
-    t690 = is_true(t683)
-    if t690:
-        t16 = t685
+    t90 = is_true(t83)
+    if t90:
+        t6 = t85
     else:
-        t16 = t683
+        t6 = t83

@@ -2,22 +2,22 @@ Module(
     body=[
         Assign(
             targets=[
-                Name(id='t691', ctx=Store())],
-            value=Name(id='t4', ctx=Load())),
+                Name(id='t66', ctx=Store())],
+            value=Name(id='t20', ctx=Load())),
         Assign(
             targets=[
-                Name(id='t694', ctx=Store())],
+                Name(id='t69', ctx=Store())],
             value=Call(
                 func=Name(id='is_true', ctx=Load()),
                 args=[
-                    Name(id='t691', ctx=Load())],
+                    Name(id='t66', ctx=Load())],
                 keywords=[])),
         If(
-            test=Name(id='t694', ctx=Load()),
+            test=Name(id='t69', ctx=Load()),
             body=[
                 Assign(
                     targets=[
-                        Name(id='t42', ctx=Store())],
+                        Name(id='t21', ctx=Store())],
                     value=Call(
                         func=Name(id='inject_bool', ctx=Load()),
                         args=[
@@ -26,7 +26,7 @@ Module(
             orelse=[
                 Assign(
                     targets=[
-                        Name(id='t42', ctx=Store())],
+                        Name(id='t21', ctx=Store())],
                     value=Call(
                         func=Name(id='inject_bool', ctx=Load()),
                         args=[

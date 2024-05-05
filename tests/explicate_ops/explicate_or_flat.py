@@ -1,7 +1,7 @@
-t482 = t29
-t484 = t32
-t487 = is_true(t482)
-if t487:
-    t33 = t482
+t68 = t6
+t70 = t7
+t73 = is_true(t68)
+if t73:
+    t2 = t68
 else:
-    t33 = t484
+    t2 = t70

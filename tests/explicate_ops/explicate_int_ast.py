@@ -2,62 +2,62 @@ Module(
     body=[
         Assign(
             targets=[
-                Name(id='t742', ctx=Store())],
-            value=Name(id='t6', ctx=Load())),
+                Name(id='t131', ctx=Store())],
+            value=Name(id='t2', ctx=Load())),
         Assign(
             targets=[
-                Name(id='t745', ctx=Store())],
+                Name(id='t134', ctx=Store())],
             value=Call(
                 func=Name(id='is_int', ctx=Load()),
                 args=[
-                    Name(id='t742', ctx=Load())],
+                    Name(id='t131', ctx=Load())],
                 keywords=[])),
         If(
-            test=Name(id='t745', ctx=Load()),
+            test=Name(id='t134', ctx=Load()),
             body=[
                 Assign(
                     targets=[
-                        Name(id='t746', ctx=Store())],
+                        Name(id='t135', ctx=Store())],
                     value=Call(
                         func=Name(id='project_int', ctx=Load()),
                         args=[
-                            Name(id='t742', ctx=Load())],
+                            Name(id='t131', ctx=Load())],
                         keywords=[])),
                 Assign(
                     targets=[
-                        Name(id='t7', ctx=Store())],
+                        Name(id='t3', ctx=Store())],
                     value=Call(
                         func=Name(id='inject_int', ctx=Load()),
                         args=[
-                            Name(id='t746', ctx=Load())],
+                            Name(id='t135', ctx=Load())],
                         keywords=[]))],
             orelse=[
                 Assign(
                     targets=[
-                        Name(id='t747', ctx=Store())],
+                        Name(id='t136', ctx=Store())],
                     value=Call(
                         func=Name(id='is_bool', ctx=Load()),
                         args=[
-                            Name(id='t742', ctx=Load())],
+                            Name(id='t131', ctx=Load())],
                         keywords=[])),
                 If(
-                    test=Name(id='t747', ctx=Load()),
+                    test=Name(id='t136', ctx=Load()),
                     body=[
                         Assign(
                             targets=[
-                                Name(id='t748', ctx=Store())],
+                                Name(id='t137', ctx=Store())],
                             value=Call(
                                 func=Name(id='project_bool', ctx=Load()),
                                 args=[
-                                    Name(id='t742', ctx=Load())],
+                                    Name(id='t131', ctx=Load())],
                                 keywords=[])),
                         Assign(
                             targets=[
-                                Name(id='t7', ctx=Store())],
+                                Name(id='t3', ctx=Store())],
                             value=Call(
                                 func=Name(id='inject_int', ctx=Load()),
                                 args=[
-                                    Name(id='t748', ctx=Load())],
+                                    Name(id='t137', ctx=Load())],
                                 keywords=[]))],
                     orelse=[
                         Expr(
