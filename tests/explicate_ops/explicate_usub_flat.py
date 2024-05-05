@@ -1,14 +1,14 @@
-t118 = t9
-t121 = is_int(t118)
-if t121:
-    t122 = project_int(t118)
-    t123 = -t122
-    t10 = inject_int(t123)
+t4 = t2
+t7 = is_int(t4)
+if t7:
+    t8 = project_int(t4)
+    t9 = -t8
+    t1 = inject_int(t9)
 else:
-    t124 = is_bool(t118)
-    if t124:
-        t125 = project_bool(t118)
-        t126 = -t125
-        t10 = inject_int(t126)
+    t10 = is_bool(t4)
+    if t10:
+        t11 = project_bool(t4)
+        t12 = -t11
+        t1 = inject_int(t12)
     else:
         throw_type_error()

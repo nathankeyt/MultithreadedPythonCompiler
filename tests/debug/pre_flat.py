@@ -1,5 +1,9 @@
-t0 = 1
-t1 = 100
-while int(t0 != t1):
-    t0 = t0 + 1
-    print(t0 and t1)
+t0 = 2
+t1 = 3
+print(t0)
+print(t1)
+t2 = t0
+t0 = t1
+t1 = t2
+print(t0)
+print(t1)

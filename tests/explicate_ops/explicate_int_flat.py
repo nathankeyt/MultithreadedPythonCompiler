@@ -1,12 +1,12 @@
-t131 = t2
-t134 = is_int(t131)
-if t134:
-    t135 = project_int(t131)
-    t3 = inject_int(t135)
+t957 = t5
+t960 = is_int(t957)
+if t960:
+    t961 = project_int(t957)
+    t6 = inject_int(t961)
 else:
-    t136 = is_bool(t131)
-    if t136:
-        t137 = project_bool(t131)
-        t3 = inject_int(t137)
+    t962 = is_bool(t957)
+    if t962:
+        t963 = project_bool(t957)
+        t6 = inject_int(t963)
     else:
         throw_type_error()

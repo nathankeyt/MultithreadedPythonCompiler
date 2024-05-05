@@ -1,51 +1,51 @@
-t54 = t0
-t56 = t5
-t59 = is_int(t54)
-if t59:
-    t60 = is_int(t56)
-    if t60:
-        t61 = project_int(t54)
-        t62 = project_int(t56)
-        t63 = t61 + t62
-        t0 = inject_int(t63)
+t3 = t0
+t5 = t1
+t8 = is_int(t3)
+if t8:
+    t9 = is_int(t5)
+    if t9:
+        t10 = project_int(t3)
+        t11 = project_int(t5)
+        t12 = t10 + t11
+        t2 = inject_int(t12)
     else:
-        t64 = is_bool(t56)
-        if t64:
-            t65 = project_int(t54)
-            t66 = project_bool(t56)
-            t67 = t65 + t66
-            t0 = inject_int(t67)
+        t13 = is_bool(t5)
+        if t13:
+            t14 = project_int(t3)
+            t15 = project_bool(t5)
+            t16 = t14 + t15
+            t2 = inject_int(t16)
         else:
             throw_type_error()
 else:
-    t68 = is_bool(t54)
-    if t68:
-        t69 = is_int(t56)
-        if t69:
-            t70 = project_bool(t54)
-            t71 = project_int(t56)
-            t72 = t70 + t71
-            t0 = inject_int(t72)
+    t17 = is_bool(t3)
+    if t17:
+        t18 = is_int(t5)
+        if t18:
+            t19 = project_bool(t3)
+            t20 = project_int(t5)
+            t21 = t19 + t20
+            t2 = inject_int(t21)
         else:
-            t73 = is_bool(t56)
-            if t73:
-                t74 = project_bool(t54)
-                t75 = project_bool(t56)
-                t76 = t74 + t75
-                t0 = inject_int(t76)
+            t22 = is_bool(t5)
+            if t22:
+                t23 = project_bool(t3)
+                t24 = project_bool(t5)
+                t25 = t23 + t24
+                t2 = inject_int(t25)
             else:
                 throw_type_error()
     else:
-        t77 = is_int(t56)
-        if t77:
+        t26 = is_int(t5)
+        if t26:
             throw_type_error()
-        t78 = is_int(t56)
-        if t78:
+        t27 = is_int(t5)
+        if t27:
             throw_type_error()
         else:
-            t79 = is_big(t56)
-            if t79:
-                t80 = project_big(t54)
-                t81 = project_big(t56)
-                t82 = add(t80, t81)
-                t0 = inject_big(t82)
+            t28 = is_big(t5)
+            if t28:
+                t29 = project_big(t3)
+                t30 = project_big(t5)
+                t31 = add(t29, t30)
+                t2 = inject_big(t31)

@@ -3,39 +3,45 @@ Module(
         Assign(
             targets=[
                 Name(id='t0', ctx=Store())],
-            value=Constant(value=1)),
+            value=Constant(value=2)),
         Assign(
             targets=[
                 Name(id='t1', ctx=Store())],
-            value=Constant(value=100)),
-        While(
-            test=Call(
-                func=Name(id='int', ctx=Load()),
+            value=Constant(value=3)),
+        Expr(
+            value=Call(
+                func=Name(id='print', ctx=Load()),
                 args=[
-                    Compare(
-                        left=Name(id='t0', ctx=Load()),
-                        ops=[
-                            NotEq()],
-                        comparators=[
-                            Name(id='t1', ctx=Load())])],
-                keywords=[]),
-            body=[
-                Assign(
-                    targets=[
-                        Name(id='t0', ctx=Store())],
-                    value=BinOp(
-                        left=Name(id='t0', ctx=Load()),
-                        op=Add(),
-                        right=Constant(value=1))),
-                Expr(
-                    value=Call(
-                        func=Name(id='print', ctx=Load()),
-                        args=[
-                            BoolOp(
-                                op=And(),
-                                values=[
-                                    Name(id='t0', ctx=Load()),
-                                    Name(id='t1', ctx=Load())])],
-                        keywords=[]))],
-            orelse=[])],
+                    Name(id='t0', ctx=Load())],
+                keywords=[])),
+        Expr(
+            value=Call(
+                func=Name(id='print', ctx=Load()),
+                args=[
+                    Name(id='t1', ctx=Load())],
+                keywords=[])),
+        Assign(
+            targets=[
+                Name(id='t2', ctx=Store())],
+            value=Name(id='t0', ctx=Load())),
+        Assign(
+            targets=[
+                Name(id='t0', ctx=Store())],
+            value=Name(id='t1', ctx=Load())),
+        Assign(
+            targets=[
+                Name(id='t1', ctx=Store())],
+            value=Name(id='t2', ctx=Load())),
+        Expr(
+            value=Call(
+                func=Name(id='print', ctx=Load()),
+                args=[
+                    Name(id='t0', ctx=Load())],
+                keywords=[])),
+        Expr(
+            value=Call(
+                func=Name(id='print', ctx=Load()),
+                args=[
+                    Name(id='t1', ctx=Load())],
+                keywords=[]))],
     type_ignores=[])
