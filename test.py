@@ -1,4 +1,5 @@
 #import "test_import.py" as im
+#import "nested_import.py" as ne
 
 im.do_something()
 
@@ -21,3 +22,5 @@ im.ne.do_something()
 im.ne.a = 200
 
 im.ne.do_something()
+
+ne.do_something()
