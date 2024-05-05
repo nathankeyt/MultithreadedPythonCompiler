@@ -35,9 +35,6 @@ class Flattener():
             for var in var_mappings.values():
                 self.dep_vars.add(var)
 
-        
-            
-
         if debug:
             open(f"debug/ast_original.py", "w").write(ast.dump(n, indent=4))
             #print("initialized flattener")
@@ -46,8 +43,6 @@ class Flattener():
         self.top_level_assignments = self.uniqify(n, {})[0]
         ast.fix_missing_locations(n)
 
-        
-        
         if debug:
             open(f"debug/ast_post_uniqify.py", "w").write(ast.dump(n, indent=4))
             open(f"debug/post_uniqify.py", "w").write(ast.unparse(n))

@@ -37,9 +37,7 @@ def compile_to_ir(file_tree, dep_trees, dep_map, all_variables):
     #print(funcs)
     
     func_ir = []
-
     func_names = set()
-
     variables = list(all_variables)
     
     for i, func in enumerate(funcs):
@@ -81,11 +79,9 @@ def compile_to_ir(file_tree, dep_trees, dep_map, all_variables):
     ir_graph.vertices[0].block = [[".globl main"], ["main:"], ["pushl %ebp"], ["movl %esp, %ebp"], ["set_stack"]] + ir_graph.vertices[0].block
     ir_graph.vertices[-1].block += [["movl $0, %eax"], ["leave"], ["ret"]]
 
-    
     assembly = generate_assembly([ir_graph] + func_ir, inter_graphs, func_names)
     
     return assembly
-    
     
 def generate_assembly(ir_graphs, inter_graphs, func_names):
     assembly = f""
@@ -584,14 +580,6 @@ def create_ir_graph(ir, graph, is_func = False) -> Graph:
             curr_block = []
     blocks.append(curr_block)
     
-    # if blocks:
-    #     for ind, ins in enumerate(blocks[-1]):
-    #         if ins[0] == 'ret':
-    #             splice = blocks[-1][ind+1:]
-    #             blocks[-1] = blocks[-1][:ind+1]
-    #             blocks.append(splice)
-    #             labels.append('end')
-    
     block_map = {lbl: blk for lbl, blk in zip(labels, blocks)}
     for lbl in block_map: # create initial graph
         graph.addVertex(v=lbl, block=block_map[lbl])
@@ -692,6 +680,22 @@ def compile_outer(file):
     binary_file = open(f"{os.path.splitext(file)[0]}.s", "w") # create .s file
     binary_file.write(assembly)
 
+def compile_n_files(files):
+    # start threads
+    threads = []
+    for file in files:
+        with open(file) as f: # check file exists
+            if f.closed:
+                print("file does not exist")
+                os.sys.exit(-1)
+
+        t = threading.Thread(target=compile_outer, args=(file))
+        print(f"started thread {t}")
+        t.start()
+        threads.append(t)
+
+    for thread in threads: # join threads
+        thread.join()
 
 
 def check_dependencies(file_tree, files):
@@ -704,49 +708,8 @@ def check_dependencies(file_tree, files):
 
 if __name__ == "__main__":
     if len(os.sys.argv) < 2:
-        print("Usage: compiler.py <main_file>")
+        print("Usage: compiler.py <file1> <file2> ...")
         os.sys.exit(-1)
-    
-    compile_outer(os.sys.argv[1])
 
-"""
-    # flatast = open(f"ast_original.py", "w")
-    # flatast.write(ast.dump(file_tree, indent=4))
-    # f = Flattener(file_tree)
-    # f.unify_defs(file_tree, [0])
-    # f.uniqify(file_tree)
-    # free_vars = set()
-    # f.get_free_vars(free_vars, file_tree)
-    # print(free_vars)
-    # f.heapify(file_tree, free_vars, set())
-    # print(ast.dump(file_tree, indent=4))
-    # f.closure_convert(file_tree)
-    # ast.fix_missing_locations(file_tree)
-
-    # preflatpy = open(f"pre_flat.py", "w")
-    # preflatpy.write(ast.unparse(file_tree))
-
-    # f.flatten(file_tree)
-    # ast.fix_missing_locations(file_tree)
-    
-    # print(ast.dump(file_tree, indent=4))
-    # free_var_list = {}
-    # get_free_vars(file_tree, None, free_var_list, None)
-    # print(free_var_list)
-
-    # flatast = open(f"ast_just_flattened.py", "w")
-    # flatast.write(ast.dump(file_tree, indent=4))
-    # flatpy = open(f"just_flat.py", "w")
-    # flatpy.write(ast.unparse(file_tree))
-
-    # f.explicate_pass(file_tree)
-    # ast.fix_missing_locations(file_tree)
-
-    # f.flatten(file_tree)
-    # f.explicate_pass(file_tree)
-
-    # flatast = open(f"flat_ast.py", "w")
-    # flatast.write(ast.dump(file_tree, indent=4))
-    # flatpy = open(f"flat.py", "w")
-    # flatpy.write(ast.unparse(file_tree))
-"""
+    compile_n_files(os.sys.argv)
+    # compile_outer(os.sys.argv[1])
