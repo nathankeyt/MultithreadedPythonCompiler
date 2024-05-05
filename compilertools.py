@@ -754,14 +754,18 @@ class Flattener():
         tmp1 = file_tree.body[0]
         if (isinstance(tmp1, Assign) and isinstance(tmp1.value, Name)):
             #print(tmp1.value.id)
-            sub_name = self.var_title + str(int(tmp1.value.id[1:]) + 1)
+            split_string = tmp1.value.id.split('.')
+            print(split_string[-1])
+            sub_name = self.var_title + str(int(split_string[-1][1:]) + 1)
             #print(sub_name)
             tmp1.value = sub_var_1
 
         tmp2 = file_tree.body[1]
         if (isinstance(tmp2, Assign) and isinstance(tmp2.value, Name)):
             #print(tmp2.value.id)
-            sub_name = self.var_title + str(int(tmp2.value.id[1:]) + 1)
+            split_string = tmp2.value.id.split('.')
+            print(split_string[-1])
+            sub_name = self.var_title + str(int(split_string[-1][1:]) + 1)
             #print(sub_name)
             tmp2.value = sub_var_2
 

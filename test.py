@@ -7,6 +7,17 @@ a = 3
 im.a = 8
 
 def func(a):
+    e = 1
+    c = 2
+
+    while (c != 1):
+        if (c == 2):
+            c = c + -1
+        else:
+            c = c + -2
+    
+    print(e)
+    print(c)
     print(a)
     print(b)
     print(im.a)
