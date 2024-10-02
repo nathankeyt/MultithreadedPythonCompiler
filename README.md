@@ -14,7 +14,7 @@ This is the repository for our python to x86 compiler, which implements multi-th
 - Explication for dynamic typing
 - Parsing using custom lark grammar
 - Abstract Syntax Tree (AST) creation
-- Multithreading for multiple files and compilation tasks that are independant of eachother
+- Multithreading using pthreads for multiple files and compilation tasks that are independant of eachother
 - Interference graph implementation
 - Register allocation using graph coloring
 
