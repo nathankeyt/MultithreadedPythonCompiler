@@ -4,11 +4,13 @@ This is the repository for our python to x86 compiler, which implements multi-th
 
 # Python Subset
 
-Our python subset includes:
-
 - Int, boolean, list, and dictionary types
 - Control flow for if-else statements and while loops
 - Function definitions and calls, including lambdas
+- Dynamic typing
+
+# Implementation:
+
 - Explication for dynamic typing
 - Parsing using custom lark grammar
 - Abstract Syntax Tree (AST) creation
