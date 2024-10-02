@@ -20,7 +20,7 @@ This is the repository for our python to x86 compiler, which implements multi-th
 
 # Usage
 
-You may compile a set of files using the command:
+You may compile a set of files using the command, which will result in an x86 equivalent of the program:
 
 ```bash
 $ python3 compiler.py <file1> <file2> <...>
