@@ -1,6 +1,6 @@
 # Multithreaded Python to x86 Compiler
 
-This is the repository for our python to x86 compiler, which implements multi-threading, along with the *import* keyword, which allows the inclusion of dependencies in files.
+This is the repository for our python to x86 compiler using a bootstrapping approach, which implements multi-threading, along with the *import* keyword, which allows the inclusion of dependencies in files.
 
 # Python Subset
 
