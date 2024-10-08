@@ -1,10 +1,27 @@
-# Final Project
+# Multithreaded Python to x86 Compiler
 
-This is the repository for our final project, which implements multi-threading, along with the *import* keyword, which allows the inclusion of dependencies in files.
+This is the repository for our python to x86 compiler using a bootstrapping approach, which implements multi-threading, along with the *import* keyword, which allows the inclusion of dependencies in files.
+
+# Python Subset
+
+- Int, boolean, list, and dictionary types
+- Control flow for if-else statements and while loops
+- Function definitions and calls, including lambdas
+- Dynamic typing
+
+# Implementation:
+
+- Explication for dynamic typing
+- Parsing using custom lark grammar
+- Abstract Syntax Tree (AST) creation and flattening
+- AST to IR conversion
+- Multithreading using pthreads for multiple files and compilation tasks that are independant of eachother
+- Interference graph implementation
+- Register allocation using graph coloring
 
 # Usage
 
-Using this is the same as all previous labs, with the inclusion of compiling multiple files concurrently. You may do this using the command
+You may compile a set of files using the command, which will result in an x86 equivalent of the program:
 
 ```bash
 $ python3 compiler.py <file1> <file2> <...>
@@ -12,4 +29,4 @@ $ python3 compiler.py <file1> <file2> <...>
 
 # Tests
 
-Tests can be run similarly to previous labs. There have been a couple of new tests included, but should not change how tests are run. This includes automated tests.
+There have been a couple of new tests included, but should not change how tests are run. This includes automated tests.
